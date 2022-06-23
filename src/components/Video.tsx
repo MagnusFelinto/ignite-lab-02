@@ -1,13 +1,64 @@
 import { DefaultUi, Player, Youtube } from "@vime/react";
 import { CaretRight, DiscordLogo, FileArrowDown, Lightning } from "phosphor-react";
+import { gql, useQuery } from "@apollo/client";
+
 import '@vime/core/themes/default.css'
-export function Video() {
+
+
+const GET_LESSSON_BY_SLUG_QUERY = gql`
+query GetLessonBySlug ($slug: String){ 
+  lesson(where: {slug: $slug}){ 
+    title
+    videoid 
+    description
+    teacher{ 
+      bio
+      avatarllRL
+      name
+    }
+  }
+}
+`
+interface GetLessonBySlugResponse {
+  lesson: {
+    tilte: string;
+    videoid: string;
+    description: string;
+    teacher: {
+      bio: string;
+      avatarllRL: string;
+      name: string;
+    }
+
+  }
+}
+
+
+interface VideoProps {
+  lessonSlug: string;
+}
+export function Video(props: VideoProps) {
+  const { data } = useQuery<GetLessonBySlugResponse>(GET_LESSSON_BY_SLUG_QUERY, {
+    variables: {
+      slug: props.lessonSlug,
+
+    }
+  })
+
+  if (!data) {
+    return (
+      <div className="flex-1">
+        <p>Carregando...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="flex-1">
       <div className="bg-black flex justify-center" >
         <div className="h-full w-full max-w-[1100px] max-h[60vh] aspect-video">
           <Player>
-            <Youtube videoId="KJj70dBgRPo" />
+            <Youtube videoId={data.lesson.videoid} />
           </Player>
           <DefaultUi />
         </div>
@@ -16,22 +67,22 @@ export function Video() {
         <div className="flex itens-start gap-16">
           <div className="flex-1">
             <h1 className="text-2xl font-bold">
-              Aula 01- Criando o projeto e realizando o setup inicial
+              {data.lesson.tilte}
             </h1>
             <p className="mt-4 text-gray-200 leading-relaxed" >
-              Nessa aula vamos dar início ao projeto criando a estrutura base da aplicação utilizando ReactJS, Vite e TailwindCSS. Vamos também realizar o setup do nosso projeto no GraphCMS criando as entidades da aplicação e integrando a API GraphQL gerada pela plataforma no nosso front-end utilizando Apollo Client.
+              {data.lesson.description}
             </p>
             <div className="flex items-center gap-4 mt-6">
               <img
                 className="h=16 w-16 rounded-full border-2 border-blue-500"
-                src="https://github.com/magnusfelinto.png"
+                src={data.lesson.teacher.avatarllRL}
                 alt="" />
               <div className="leading-relaxed">
                 <strong className="font-bold text-2xl block ">
-                  Magnus Felinto
+                  {data.lesson.teacher.name}
                 </strong>
                 <span className="text-gray-200 text-sm block">
-                  Aluno de C&C
+                  {data.lesson.teacher.bio}
                 </span>
               </div>
             </div>
